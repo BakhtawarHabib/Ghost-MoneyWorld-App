@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "276987047372",
+    "project_id": "ghost-money-world",
+    "storage_bucket": "ghost-money-world.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:276987047372:android:d091e2fff0d3e194de8169",
+        "android_client_info": {
+          "package_name": "com.app.ghostmoney"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB5ho-61s45T20FlHgJl8tQzVftTOK2P2k"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

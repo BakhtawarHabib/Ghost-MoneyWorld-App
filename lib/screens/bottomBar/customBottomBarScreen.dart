@@ -3,12 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_floating_bottom_bar/flutter_floating_bottom_bar.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import 'package:ghost_money_world/ads/adsService.dart';
 import 'package:ghost_money_world/constants/app_colors.dart';
 import 'package:ghost_money_world/screens/homeScreen.dart';
 import 'package:ghost_money_world/screens/profile/profileScreen.dart';
 import 'package:ghost_money_world/screens/categories/categoriesScreen.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import 'package:svg_flutter/svg.dart';
 
@@ -37,7 +35,6 @@ class _CustomBottomBarScreenState extends State<CustomBottomBarScreen>
   @override
   void initState() {
     super.initState();
-    AdsService.loadBanner();
     currentPage = widget.currentIndex;
     tabController = TabController(
       length: pages.length,
@@ -129,14 +126,6 @@ class _CustomBottomBarScreenState extends State<CustomBottomBarScreen>
           ),
         ),
       ),
-      bottomNavigationBar:
-          AdsService.banner == null
-              ? SizedBox.shrink()
-              : Container(
-                height: AdsService.banner!.size.height.toDouble(),
-                color: Colors.white,
-                child: AdWidget(ad: AdsService.banner!),
-              ),
     );
   }
 }

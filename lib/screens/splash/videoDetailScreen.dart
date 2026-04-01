@@ -2,14 +2,12 @@ import 'package:chewie/chewie.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import 'package:ghost_money_world/ads/adsService.dart';
 import 'package:ghost_money_world/constants/app_colors.dart';
 import 'package:ghost_money_world/constants/text_helper.dart';
 import 'package:ghost_money_world/models/videoModel.dart';
 import 'package:ghost_money_world/screens/categories/categoriesController.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:ghost_money_world/config/utils.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:video_player/video_player.dart';
 
 class VideoDetailPage extends StatefulWidget {
@@ -50,7 +48,12 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
   }
 
   Future<void> _initPlayer() async {
-    _videoController = VideoPlayerController.network(widget.videoUrl);
+    if (widget.videoUrl.isEmpty) {
+      return;
+    }
+    _videoController = VideoPlayerController.networkUrl(
+      Uri.parse(widget.videoUrl),
+    );
 
     await _videoController.initialize();
 
@@ -77,7 +80,9 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
 
   @override
   void dispose() {
-    _videoController.dispose();
+    if (widget.videoUrl.isNotEmpty) {
+      _videoController.dispose();
+    }
     _chewieController?.dispose();
     super.dispose();
   }
@@ -100,14 +105,6 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
         ),
       ),
 
-      bottomNavigationBar:
-          AdsService.banner == null
-              ? SizedBox.shrink()
-              : Container(
-                height: AdsService.banner!.size.height.toDouble(),
-                color: Colors.white,
-                child: AdWidget(ad: AdsService.banner!),
-              ),
       body: ListView(
         children: [
           size20h,
@@ -117,7 +114,14 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
             child: AspectRatio(
               aspectRatio: 16 / 9,
               child:
-                  playerReady
+                  widget.videoUrl.isEmpty
+                      ? Center(
+                        child: customText(
+                          text: "Video is not available",
+                          color: Colors.white70,
+                        ),
+                      )
+                      : playerReady
                       ? Chewie(controller: _chewieController!)
                       : Center(
                         child: CircularProgressIndicator(color: Colors.white),
@@ -143,7 +147,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
                 Container(
                   padding: EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                   decoration: BoxDecoration(
-                    color: AppColors.primaryColor.withOpacity(0.25),
+                    color: AppColors.primaryColor.withValues(alpha: 0.25),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: customText(
@@ -215,17 +219,20 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
                           title: v.title,
                           description: v.description,
                           categoryId: v.category,
-                          videoUrl: v.videoUrl,
-                          thumbnail: v.thumbnail,
+                          videoUrl: v.resolvedVideoUrl,
+                          thumbnail: v.resolvedThumbnail,
                         ),
                       );
                     },
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(8),
-                      child: CachedNetworkImage(
-                        imageUrl: v.thumbnail,
-                        fit: BoxFit.cover,
-                      ),
+                      child:
+                          v.resolvedThumbnail.isEmpty
+                              ? Container(color: Colors.grey.shade800)
+                              : CachedNetworkImage(
+                                imageUrl: v.resolvedThumbnail,
+                                fit: BoxFit.cover,
+                              ),
                     ),
                   );
                 },

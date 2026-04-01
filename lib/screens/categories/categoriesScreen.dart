@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:ghost_money_world/ads/adsService.dart';
 import 'package:ghost_money_world/config/utils.dart';
 import 'package:ghost_money_world/models/videoModel.dart';
 import 'package:ghost_money_world/screens/categories/categoriesController.dart';
@@ -106,43 +105,49 @@ class CategoryListSection extends StatelessWidget {
                           padding: const EdgeInsets.only(right: 15, left: 15),
                           child: InkWell(
                             onTap: () {
-                              AdsService.showRewardedBeforePlay(() {
-                                Get.to(
-                                  () => VideoDetailPage(
-                                    title: video.title,
-                                    description: video.description,
-                                    categoryId: video.category,
-                                    videoUrl: video.videoUrl,
-                                    thumbnail: video.thumbnail,
-                                    id: video.id,
-                                  ),
-                                );
-                              });
+                              Get.to(
+                                () => VideoDetailPage(
+                                  title: video.title,
+                                  description: video.description,
+                                  categoryId: video.category,
+                                  videoUrl: video.resolvedVideoUrl,
+                                  thumbnail: video.resolvedThumbnail,
+                                  id: video.id,
+                                ),
+                              );
                             },
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(12),
-                              child: CachedNetworkImage(
-                                imageUrl: video.thumbnail,
-                                width: 115.w,
-                                height: 145.h,
-                                fit: BoxFit.cover,
-                                placeholder:
-                                    (_, __) => Shimmer.fromColors(
-                                      baseColor: Colors.grey.shade800,
-                                      highlightColor: Colors.grey.shade700,
-                                      child: Container(
+                              child:
+                                  video.resolvedThumbnail.isEmpty
+                                      ? Container(
                                         width: 115.w,
                                         height: 145.h,
-                                        color: Colors.grey.shade900,
+                                        color: Colors.grey.shade700,
+                                      )
+                                      : CachedNetworkImage(
+                                        imageUrl: video.resolvedThumbnail,
+                                        width: 115.w,
+                                        height: 145.h,
+                                        fit: BoxFit.cover,
+                                        placeholder:
+                                            (_, __) => Shimmer.fromColors(
+                                              baseColor: Colors.grey.shade800,
+                                              highlightColor:
+                                                  Colors.grey.shade700,
+                                              child: Container(
+                                                width: 115.w,
+                                                height: 145.h,
+                                                color: Colors.grey.shade900,
+                                              ),
+                                            ),
+                                        errorWidget:
+                                            (_, __, ___) => Container(
+                                              width: 115.w,
+                                              height: 145.h,
+                                              color: Colors.grey.shade700,
+                                            ),
                                       ),
-                                    ),
-                                errorWidget:
-                                    (_, __, ___) => Container(
-                                      width: 115.w,
-                                      height: 145.h,
-                                      color: Colors.grey.shade700,
-                                    ),
-                              ),
                             ),
                           ),
                         );

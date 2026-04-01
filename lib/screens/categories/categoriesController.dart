@@ -14,7 +14,6 @@ class CategoriesController extends GetxController {
     super.onInit();
   }
 
-
   Future<void> fetchCategories() async {
     try {
       final snapshot =
@@ -22,7 +21,7 @@ class CategoriesController extends GetxController {
 
       categories =
           snapshot.docs.map((doc) {
-            return CategoryModel.fromMap(doc.data());
+            return CategoryModel.fromMap(doc.data(), docId: doc.id);
           }).toList();
 
       for (var category in categories) {
@@ -38,24 +37,26 @@ class CategoriesController extends GetxController {
     }
   }
 
-
   Future<void> fetchVideosByCategory(String categoryId) async {
     try {
       final snap =
           await FirebaseFirestore.instance
               .collection("videos")
+              // Strict id matching: videos.category must equal categories.doc.id
               .where("category", isEqualTo: categoryId)
               .get();
 
       categoryVideos[categoryId] =
-          snap.docs.map((doc) => VideoModel.fromMap(doc.data())).toList();
+          snap.docs
+              .map((doc) => VideoModel.fromMap(doc.data(), docId: doc.id))
+              .where((video) => video.isMuxReady)
+              .toList();
 
       update();
     } catch (e) {
       print("Error fetching videos for category $categoryId: $e");
     }
   }
-
 
   Future<String> getCategoryName(String categoryId) async {
     try {
@@ -72,16 +73,19 @@ class CategoriesController extends GetxController {
     }
   }
 
-
   Future<List<VideoModel>> getVideosByCategory(String categoryId) async {
     try {
       final snap =
           await FirebaseFirestore.instance
               .collection("videos")
+              // Strict id matching: videos.category must equal categories.doc.id
               .where("category", isEqualTo: categoryId)
               .get();
 
-      return snap.docs.map((doc) => VideoModel.fromMap(doc.data())).toList();
+      return snap.docs
+          .map((doc) => VideoModel.fromMap(doc.data(), docId: doc.id))
+          .where((video) => video.isMuxReady)
+          .toList();
     } catch (e) {
       print("Error fetching similar videos: $e");
       return [];

@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:ghost_money_world/config/utils.dart';
 import 'package:ghost_money_world/models/videoModel.dart';
 import 'package:ghost_money_world/screens/categories/categoriesController.dart';
+import 'package:ghost_money_world/screens/authScreens/widgets/video_login_prompt.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:ghost_money_world/constants/text_helper.dart';
 import 'package:ghost_money_world/screens/splash/videoDetailScreen.dart';
@@ -105,15 +106,19 @@ class CategoryListSection extends StatelessWidget {
                           padding: const EdgeInsets.only(right: 15, left: 15),
                           child: InkWell(
                             onTap: () {
-                              Get.to(
-                                () => VideoDetailPage(
-                                  title: video.title,
-                                  description: video.description,
-                                  categoryId: video.category,
-                                  videoUrl: video.resolvedVideoUrl,
-                                  thumbnail: video.resolvedThumbnail,
-                                  id: video.id,
-                                ),
+                              VideoLoginPrompt.guardVideoAccess(
+                                onAuthorized: () {
+                                  Get.to(
+                                    () => VideoDetailPage(
+                                      title: video.title,
+                                      description: video.description,
+                                      categoryId: video.category,
+                                      videoUrl: video.resolvedVideoUrl,
+                                      thumbnail: video.resolvedThumbnail,
+                                      id: video.id,
+                                    ),
+                                  );
+                                },
                               );
                             },
                             child: ClipRRect(

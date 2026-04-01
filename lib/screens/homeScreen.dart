@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:ghost_money_world/models/categoryModel.dart';
 import 'package:ghost_money_world/models/videoModel.dart';
+import 'package:ghost_money_world/screens/authScreens/widgets/video_login_prompt.dart';
 import 'package:ghost_money_world/screens/homeScreen/homeController.dart';
 import 'package:ghost_money_world/screens/splash/videoDetailScreen.dart';
 import 'package:shimmer/shimmer.dart';
@@ -336,10 +337,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
                     size15h,
 
-                    if (continueCategory != null)
-                      _ContinueWatchingSection(
-                        videos: ctrl.categoryVideos[continueCategory.id] ?? [],
-                      ),
+                    // if (continueCategory != null)
+                    //   _ContinueWatchingSection(
+                    //     videos: ctrl.categoryVideos[continueCategory.id] ?? [],
+                    //   ),
                     size100h,
                   ],
                 );
@@ -511,15 +512,19 @@ class _LiveNowSection extends StatelessWidget {
               final video = videos[index];
               return GestureDetector(
                 onTap: () {
-                  Get.to(
-                    () => VideoDetailPage(
-                      id: video.id,
-                      title: video.title,
-                      description: video.description,
-                      categoryId: video.category,
-                      videoUrl: video.resolvedVideoUrl,
-                      thumbnail: video.resolvedThumbnail,
-                    ),
+                  VideoLoginPrompt.guardVideoAccess(
+                    onAuthorized: () {
+                      Get.to(
+                        () => VideoDetailPage(
+                          id: video.id,
+                          title: video.title,
+                          description: video.description,
+                          categoryId: video.category,
+                          videoUrl: video.resolvedVideoUrl,
+                          thumbnail: video.resolvedThumbnail,
+                        ),
+                      );
+                    },
                   );
                 },
                 child: Container(
@@ -607,15 +612,19 @@ class _PosterStripSection extends StatelessWidget {
               final video = videos[index];
               return GestureDetector(
                 onTap: () {
-                  Get.to(
-                    () => VideoDetailPage(
-                      id: video.id,
-                      title: video.title,
-                      description: video.description,
-                      categoryId: video.category,
-                      videoUrl: video.resolvedVideoUrl,
-                      thumbnail: video.resolvedThumbnail,
-                    ),
+                  VideoLoginPrompt.guardVideoAccess(
+                    onAuthorized: () {
+                      Get.to(
+                        () => VideoDetailPage(
+                          id: video.id,
+                          title: video.title,
+                          description: video.description,
+                          categoryId: video.category,
+                          videoUrl: video.resolvedVideoUrl,
+                          thumbnail: video.resolvedThumbnail,
+                        ),
+                      );
+                    },
                   );
                 },
                 child: Container(
@@ -658,15 +667,19 @@ class _ContinueWatchingSection extends StatelessWidget {
                 videos.take(3).map((video) {
                   return GestureDetector(
                     onTap: () {
-                      Get.to(
-                        () => VideoDetailPage(
-                          id: video.id,
-                          title: video.title,
-                          description: video.description,
-                          categoryId: video.category,
-                          videoUrl: video.resolvedVideoUrl,
-                          thumbnail: video.resolvedThumbnail,
-                        ),
+                      VideoLoginPrompt.guardVideoAccess(
+                        onAuthorized: () {
+                          Get.to(
+                            () => VideoDetailPage(
+                              id: video.id,
+                              title: video.title,
+                              description: video.description,
+                              categoryId: video.category,
+                              videoUrl: video.resolvedVideoUrl,
+                              thumbnail: video.resolvedThumbnail,
+                            ),
+                          );
+                        },
                       );
                     },
                     child: Container(

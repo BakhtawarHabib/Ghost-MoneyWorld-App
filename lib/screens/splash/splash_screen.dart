@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
@@ -7,7 +6,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:ghost_money_world/config/utils.dart';
 import 'package:ghost_money_world/screens/authScreens/loginScreen.dart';
 import 'package:ghost_money_world/screens/bottomBar/customBottomBarScreen.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({Key? key}) : super(key: key);
@@ -47,16 +45,14 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   Future<void> _navigateUser() async {
-    // final prefs = await SharedPreferences.getInstance();
-    // final userId = prefs.getString("userId");
-    // log(userId.toString());
+    final user = FirebaseAuth.instance.currentUser;
 
     Timer(const Duration(seconds: 3), () {
-      // if (userId != null) {
-      Get.offAll(() => CustomBottomBarScreen(currentIndex: 0));
-      // } else {
-      //   Get.offAll(() => LoginScreen());
-      // }
+      if (user != null) {
+        Get.offAll(() => const CustomBottomBarScreen(currentIndex: 0));
+      } else {
+        Get.offAll(() => const LoginScreen());
+      }
     });
   }
 

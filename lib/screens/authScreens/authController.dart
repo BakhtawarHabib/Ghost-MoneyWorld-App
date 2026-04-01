@@ -1,272 +1,183 @@
-// import 'dart:io';
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:ghost_money_world/constants/app_colors.dart';
+import 'package:ghost_money_world/screens/bottomBar/customBottomBarScreen.dart';
+import 'package:ghost_money_world/services/auth_service.dart';
 
-// import 'package:cloud_firestore/cloud_firestore.dart';
-// import 'package:firebase_auth/firebase_auth.dart';
-// import 'package:firebase_storage/firebase_storage.dart';
-// import 'package:flutter/material.dart';
-// import 'package:get/get.dart';
-// import 'package:ghost_money_world/constants/app_colors.dart';
-// import 'package:ghost_money_world/constants/shared_ref.dart';
-// import 'package:ghost_money_world/screens/bottomBar/customBottomBarScreen.dart';
-// import 'package:ghost_money_world/widgets/showLoaderDialog.dart';
-// import 'package:image_picker/image_picker.dart';
+class AuthController extends GetxController {
+  final AuthService _authService = AuthService();
 
-// class AuthController extends GetxController {
-//   final registerEmailController = TextEditingController();
-//   final registerPasswordController = TextEditingController();
-//   final emailController = TextEditingController();
-//   final phoneController = TextEditingController();
-//   final passwordController = TextEditingController();
-//   final nameController = TextEditingController();
-//   final confirmPasswordController = TextEditingController();
+  final loginEmailController = TextEditingController();
+  final loginPasswordController = TextEditingController();
+  final signUpNameController = TextEditingController();
+  final signUpEmailController = TextEditingController();
+  final signUpPasswordController = TextEditingController();
+  final signUpConfirmPasswordController = TextEditingController();
 
-//   final _auth = FirebaseAuth.instance;
-//   final _firestore = FirebaseFirestore.instance;
-//   final ImagePicker _picker = ImagePicker();
+  bool loginLoading = false;
+  bool signUpLoading = false;
+  bool guestLoading = false;
 
-//   bool _isLoading = false;
-//   bool get isLoading => _isLoading;
+  void _setLoginLoading(bool value) {
+    loginLoading = value;
+    update();
+  }
 
-//   String? profileImageUrl;
-//   File? profileImageFile;
+  void _setSignUpLoading(bool value) {
+    signUpLoading = value;
+    update();
+  }
 
-//   void _setLoading(bool value) {
-//     _isLoading = value;
-//     update();
-//   }
+  void _setGuestLoading(bool value) {
+    guestLoading = value;
+    update();
+  }
 
-//   void showImageSourceSheet() {
-//     Get.bottomSheet(
-//       Container(
-//         padding: const EdgeInsets.symmetric(vertical: 16),
-//         decoration: const BoxDecoration(
-//           color: Colors.black,
-//           borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-//         ),
-//         child: Wrap(
-//           children: [
-//             ListTile(
-//               leading: const Icon(Icons.camera_alt, color: Colors.white),
-//               title: const Text(
-//                 'Camera',
-//                 style: TextStyle(color: Colors.white),
-//               ),
-//               onTap: () => _pickImage(ImageSource.camera),
-//             ),
-//             ListTile(
-//               leading: const Icon(Icons.photo_library, color: Colors.white),
-//               title: const Text(
-//                 'Gallery',
-//                 style: TextStyle(color: Colors.white),
-//               ),
-//               onTap: () => _pickImage(ImageSource.gallery),
-//             ),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
+  String? _validateEmail(String email) {
+    final regex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+    if (!regex.hasMatch(email)) return 'Please enter a valid email';
+    return null;
+  }
 
-//   Future<void> _pickImage(ImageSource source) async {
-//     try {
-//       final XFile? pickedFile = await _picker.pickImage(
-//         source: source,
-//         imageQuality: 75,
-//       );
+  String? _validatePassword(String password) {
+    if (password.length < 6) {
+      return 'Password must be at least 6 characters';
+    }
+    return null;
+  }
 
-//       if (pickedFile != null) {
-//         profileImageFile = File(pickedFile.path);
-//         update();
-//       }
-//     } catch (e) {
-//       Get.snackbar(
-//         'Error',
-//         'Failed to pick image',
-//         backgroundColor: AppColors.primaryColor,
-//       );
-//     } finally {
-//       if (Get.isBottomSheetOpen ?? false) {
-//         Get.back();
-//       }
-//     }
-//   }
+  Future<void> login() async {
+    final email = loginEmailController.text.trim();
+    final password = loginPasswordController.text.trim();
+    if (email.isEmpty || password.isEmpty) {
+      Get.snackbar(
+        'Missing fields',
+        'Email and password are required',
+        backgroundColor: AppColors.primaryColor,
+      );
+      return;
+    }
+    final emailError = _validateEmail(email);
+    if (emailError != null) {
+      Get.snackbar(
+        'Validation',
+        emailError,
+        backgroundColor: AppColors.primaryColor,
+      );
+      return;
+    }
+    final passwordError = _validatePassword(password);
+    if (passwordError != null) {
+      Get.snackbar(
+        'Validation',
+        passwordError,
+        backgroundColor: AppColors.primaryColor,
+      );
+      return;
+    }
 
-//   Future<String?> _uploadProfileImage(String uid) async {
-//     if (profileImageFile == null) return null;
+    _setLoginLoading(true);
+    try {
+      await _authService.loginWithEmail(email: email, password: password);
+      Get.offAll(() => const CustomBottomBarScreen(currentIndex: 0));
+    } catch (e) {
+      Get.snackbar(
+        'Login failed',
+        e.toString().replaceFirst('Exception: ', ''),
+        backgroundColor: AppColors.primaryColor,
+      );
+    } finally {
+      _setLoginLoading(false);
+    }
+  }
 
-//     try {
-//       final ref = FirebaseStorage.instance
-//           .ref()
-//           .child('user_profile_images')
-//           .child('$uid.jpg');
+  Future<void> signUp() async {
+    final name = signUpNameController.text.trim();
+    final email = signUpEmailController.text.trim();
+    final password = signUpPasswordController.text.trim();
+    final confirmPassword = signUpConfirmPasswordController.text.trim();
 
-//       await ref.putFile(profileImageFile!);
-//       final url = await ref.getDownloadURL();
-//       return url;
-//     } catch (e) {
-//       Get.snackbar(
-//         'Error',
-//         'Failed to upload profile image',
-//         backgroundColor: AppColors.primaryColor,
-//       );
-//       return null;
-//     }
-//   }
+    if (name.isEmpty ||
+        email.isEmpty ||
+        password.isEmpty ||
+        confirmPassword.isEmpty) {
+      Get.snackbar(
+        'Missing fields',
+        'All fields are required',
+        backgroundColor: AppColors.primaryColor,
+      );
+      return;
+    }
+    final emailError = _validateEmail(email);
+    if (emailError != null) {
+      Get.snackbar(
+        'Validation',
+        emailError,
+        backgroundColor: AppColors.primaryColor,
+      );
+      return;
+    }
+    final passwordError = _validatePassword(password);
+    if (passwordError != null) {
+      Get.snackbar(
+        'Validation',
+        passwordError,
+        backgroundColor: AppColors.primaryColor,
+      );
+      return;
+    }
+    if (password != confirmPassword) {
+      Get.snackbar(
+        'Password mismatch',
+        'Confirm password must match password',
+        backgroundColor: AppColors.primaryColor,
+      );
+      return;
+    }
 
-//   Future<void> signUp() async {
-//     final email = registerEmailController.text.trim();
-//     final phone = phoneController.text.trim();
-//     final password = registerPasswordController.text.trim();
-//     final confirmPassword = confirmPasswordController.text.trim();
-//     final name = nameController.text.trim();
+    _setSignUpLoading(true);
+    try {
+      await _authService.signUpWithEmail(
+        name: name,
+        email: email,
+        password: password,
+      );
+      Get.offAll(() => const CustomBottomBarScreen(currentIndex: 0));
+    } catch (e) {
+      Get.snackbar(
+        'Sign up failed',
+        e.toString().replaceFirst('Exception: ', ''),
+        backgroundColor: AppColors.primaryColor,
+      );
+    } finally {
+      _setSignUpLoading(false);
+    }
+  }
 
-//     if (email.isEmpty ||
-//         phone.isEmpty ||
-//         password.isEmpty ||
-//         confirmPassword.isEmpty) {
-//       Get.snackbar(
-//         'Error',
-//         'All fields are required',
-//         backgroundColor: AppColors.primaryColor,
-//       );
-//       return;
-//     }
+  Future<void> signInAsGuest() async {
+    _setGuestLoading(true);
+    try {
+      await _authService.signInAsGuest();
+      Get.offAll(() => const CustomBottomBarScreen(currentIndex: 0));
+    } catch (e) {
+      Get.snackbar(
+        'Guest sign-in failed',
+        e.toString().replaceFirst('Exception: ', ''),
+        backgroundColor: AppColors.primaryColor,
+      );
+    } finally {
+      _setGuestLoading(false);
+    }
+  }
 
-//     if (password != confirmPassword) {
-//       Get.snackbar(
-//         'Error',
-//         'Passwords do not match',
-//         backgroundColor: AppColors.primaryColor,
-//       );
-//       return;
-//     }
-
-//     _setLoading(true);
-
-//     try {
-//       // Always store phone with +1 (United States) country code
-//       String normalizedPhone = phone.replaceAll(RegExp(r'\s+'), '');
-//       if (!normalizedPhone.startsWith('+')) {
-//         // If user typed only digits, prefix with +1
-//         if (!normalizedPhone.startsWith('1')) {
-//           normalizedPhone = '1$normalizedPhone';
-//         }
-//         normalizedPhone = '+$normalizedPhone';
-//       }
-
-//       UserCredential cred = await _auth.createUserWithEmailAndPassword(
-//         email: email,
-//         password: password,
-//       );
-
-//       final uid = cred.user?.uid;
-//       if (uid == null) {
-//         throw Exception('User UID is null');
-//       }
-
-//       final imageUrl = await _uploadProfileImage(uid);
-//       profileImageUrl = imageUrl;
-
-//       await _firestore.collection('users').doc(uid).set({
-//         'uid': uid,
-//         'email': email,
-//         'name': name,
-//         'phone': normalizedPhone,
-//         'photoUrl': imageUrl ?? '',
-//         'createdAt': FieldValue.serverTimestamp(),
-//       });
-
-//       await saveFirebaseUserID(uid.toString());
-
-//       Get.snackbar(
-//         'Success',
-//         'Account created successfully',
-//         backgroundColor: AppColors.primaryColor,
-//       );
-//       Get.offAll(() => CustomBottomBarScreen());
-//     } on FirebaseAuthException catch (e) {
-//       Get.snackbar(
-//         'Auth Error',
-//         e.message ?? 'Something went wrong',
-//         backgroundColor: AppColors.primaryColor,
-//       );
-//     } catch (e) {
-//       Get.snackbar(
-//         'Error',
-//         e.toString(),
-//         backgroundColor: AppColors.primaryColor,
-//       );
-//     } finally {
-//       _setLoading(false);
-//     }
-//   }
-
-//   Future<void> signIn(BuildContext context) async {
-//     final email = emailController.text.trim();
-//     final password = passwordController.text.trim();
-
-//     if (email.isEmpty || password.isEmpty) {
-//       Get.snackbar(
-//         'Error',
-//         'Email and Password are required',
-//         backgroundColor: AppColors.primaryColor,
-//       );
-//       return;
-//     }
-
-//     // Show loading dialog
-//     showLoaderDialog(context);
-//     _setLoading(true);
-
-//     try {
-//       UserCredential cred = await _auth.signInWithEmailAndPassword(
-//         email: email,
-//         password: password,
-//       );
-
-//       final uid = cred.user?.uid;
-//       if (uid == null) {
-//         throw Exception('User UID is null');
-//       }
-//       await saveFirebaseUserID(uid.toString());
-
-//       hideLoaderDialog();
-//       _setLoading(false);
-
-//       Get.offAll(() => CustomBottomBarScreen());
-//     } on FirebaseAuthException catch (e) {
-//       hideLoaderDialog();
-//       _setLoading(false);
-
-//       await Future.delayed(const Duration(milliseconds: 150));
-
-//       Get.snackbar(
-//         'Auth Error',
-//         e.message ?? 'Something went wrong',
-//         backgroundColor: AppColors.primaryColor,
-//         duration: const Duration(seconds: 3),
-//       );
-//     } catch (e) {
-//       hideLoaderDialog();
-//       _setLoading(false);
-
-//       await Future.delayed(const Duration(milliseconds: 150));
-
-//       Get.snackbar(
-//         'Error',
-//         e.toString(),
-//         backgroundColor: AppColors.primaryColor,
-//         duration: const Duration(seconds: 3),
-//       );
-//     }
-//   }
-
-//   @override
-//   void onClose() {
-//     emailController.dispose();
-//     phoneController.dispose();
-//     passwordController.dispose();
-//     confirmPasswordController.dispose();
-//     super.onClose();
-//   }
-// }
+  @override
+  void onClose() {
+    loginEmailController.dispose();
+    loginPasswordController.dispose();
+    signUpNameController.dispose();
+    signUpEmailController.dispose();
+    signUpPasswordController.dispose();
+    signUpConfirmPasswordController.dispose();
+    super.onClose();
+  }
+}

@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
@@ -5,6 +6,8 @@ import 'package:ghost_money_world/config/utils.dart';
 import 'package:ghost_money_world/constants/app_colors.dart';
 import 'package:ghost_money_world/constants/text_helper.dart';
 import 'package:ghost_money_world/screens/authScreens/widgets/video_login_prompt.dart';
+import 'package:ghost_money_world/screens/profile/change_password_screen.dart';
+import 'package:ghost_money_world/screens/profile/deleteAccountScreen.dart';
 import 'package:ghost_money_world/screens/profile/editProfileScreen.dart';
 import 'package:ghost_money_world/screens/profile/profileController.dart';
 import 'package:ghost_money_world/screens/settings/settingController.dart';
@@ -47,7 +50,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 fit: StackFit.loose,
                 children: [
                   Container(
-                    height: 300.h,
+                    height: 200.h,
                     width: double.infinity,
                     decoration: const BoxDecoration(
                       color: Colors.black,
@@ -57,77 +60,41 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     ),
                   ),
-
-                  // Positioned(
-                  //   bottom: -30,
-                  //   left: 20.w,
-                  //   child:
-                  //       controller.photoUrl != null
-                  //           ? ClipRRect(
-                  //             borderRadius: BorderRadius.circular(100),
-                  //             child: CachedNetworkImage(
-                  //               imageUrl: controller.photoUrl!,
-                  //               height: 80.h,
-                  //               width: 80.h,
-                  //               fit: BoxFit.cover,
-                  //               placeholder:
-                  //                   (context, url) => Container(
-                  //                     height: 50.h,
-                  //                     alignment: Alignment.center,
-                  //                     child: const CircularProgressIndicator(
-                  //                       color: AppColors.primaryColor,
-                  //                     ),
-                  //                   ),
-                  //               errorWidget:
-                  //                   (context, url, error) => Container(
-                  //                     height: 80.h,
-                  //                     width: 80.w,
-                  //                     decoration: const BoxDecoration(
-                  //                       shape: BoxShape.circle,
-                  //                       color: AppColors.primaryColor,
-                  //                     ),
-                  //                     child: Icon(
-                  //                       Icons.person,
-                  //                       size: 50.sp,
-                  //                       color: AppColors.black000000,
-                  //                     ),
-                  //                   ),
-                  //             ),
-                  //           )
-                  //           : SizedBox(),
-                  // ),
+                  Positioned(
+                    bottom: -36.h,
+                    left: 20.w,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 3),
+                      ),
+                      child: CircleAvatar(
+                        radius: 44.r,
+                        backgroundColor: AppColors.greyEDEDED,
+                        backgroundImage:
+                            controller.photoUrl.isNotEmpty
+                                ? CachedNetworkImageProvider(
+                                  controller.photoUrl,
+                                )
+                                : null,
+                        child:
+                            controller.photoUrl.isEmpty
+                                ? Icon(
+                                  Icons.person,
+                                  size: 44.sp,
+                                  color: AppColors.black000000.withValues(
+                                    alpha: 0.45,
+                                  ),
+                                )
+                                : null,
+                      ),
+                    ),
+                  ),
                 ],
               ),
 
-              size20h,
-              Padding(
-                padding: const EdgeInsets.only(left: 20),
-                child: customText(
-                  text: "Settings",
-                  fontSize: 20.sp,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              // Padding(
-              //   padding: const EdgeInsets.only(left: 25, right: 25),
-              //   child: customText(
-              //     text:
-              //         controller.name?.isNotEmpty == true
-              //             ? controller.name!
-              //             : (controller.phone ?? ""),
-              //     fontWeight: FontWeight.w600,
-              //     fontSize: 20.sp,
-              //   ),
-              // ),
+              SizedBox(height: 44.h),
 
-              // Padding(
-              //   padding: const EdgeInsets.only(left: 25, right: 25),
-              //   child: customText(
-              //     text: controller.email ?? "",
-              //     fontSize: 12.sp,
-              //     color: Colors.grey[700],
-              //   ),
-              // ),
               size20h,
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -146,6 +113,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   color: Colors.black54,
                 ),
               ),
+              if (controller.phone.isNotEmpty)
+                Padding(
+                  padding: EdgeInsets.fromLTRB(20.w, 6.h, 20.w, 0),
+                  child: customText(
+                    text: controller.phone,
+                    fontSize: 13.sp,
+                    color: Colors.black54,
+                  ),
+                ),
+              if (controller.bio.isNotEmpty)
+                Padding(
+                  padding: EdgeInsets.fromLTRB(20.w, 10.h, 20.w, 0),
+                  child: customText(
+                    text: controller.bio,
+                    fontSize: 13.sp,
+                    color: Colors.black87,
+                  ),
+                ),
               if (controller.isGuest)
                 Padding(
                   padding: const EdgeInsets.symmetric(
@@ -233,15 +218,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             alpha: 0.8,
                           ),
                         ),
-                        // profileTile(
-                        //   () {
-                        //     Get.to(() => const DeleteAccountScreen());
-                        //   },
-                        //   "assets/images/logout_icon.svg",
-                        //   "Delete Account",
-                        //   color: AppColors.redFF2B3A,
-                        // ),
                         profileTile(
+                          () {
+                            if (!controller.canChangePassword) {
+                              VideoLoginPrompt.guardEditProfileAccess(
+                                onAuthorized: () {},
+                              );
+                              return;
+                            }
+                            Get.to(() => const ChangePasswordScreen());
+                          },
+                          "assets/images/password.svg",
+                          "Change Password",
+                          iconColor: AppColors.black000000.withValues(
+                            alpha: 0.8,
+                          ),
+                        ),
+
+                        profileTile(
+                          () {
+                            VideoLoginPrompt.guardEditProfileAccess(
+                              onAuthorized: () {
+                                Get.to(() => const DeleteAccountScreen());
+                              },
+                            );
+                          },
+                          "assets/images/logout_icon.svg",
+                          "Delete Account",
+                          color: AppColors.redFF2B3A,
+                        ),
+                        profileTile(
+                          
                           controller.logout,
                           "assets/images/logout_icon.svg",
                           "Logout",
@@ -292,7 +299,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 colorFilter:
                     iconColor == null
                         ? null
-                        : ColorFilter.mode(iconColor!, BlendMode.srcIn),
+                        : ColorFilter.mode(iconColor, BlendMode.srcIn),
               ),
               size10w,
               customText(

@@ -3,7 +3,9 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:ghost_money_world/config/utils.dart';
 import 'package:ghost_money_world/constants/text_helper.dart';
+import 'package:ghost_money_world/constants/app_colors.dart';
 import 'package:ghost_money_world/screens/authScreens/authController.dart';
+import 'package:ghost_money_world/screens/authScreens/forgot_password_screen.dart';
 import 'package:ghost_money_world/screens/authScreens/signUpScreen.dart';
 import 'package:ghost_money_world/screens/authScreens/widgets/auth_input_field.dart';
 import 'package:ghost_money_world/screens/authScreens/widgets/auth_primary_button.dart';
@@ -56,7 +58,25 @@ class LoginScreen extends StatelessWidget {
                       return null;
                     },
                   ),
-                  size20h,
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: () {
+                        Get.to(
+                          () => ForgotPasswordScreen(
+                            initialEmail: ctrl.loginEmailController.text.trim(),
+                          ),
+                        );
+                      },
+                      child: customText(
+                        text: 'Forgot password?',
+                        color: AppColors.primaryColor,
+                        decoration: TextDecoration.underline,
+                        fontSize: 13.sp,
+                      ),
+                    ),
+                  ),
+                  size16h,
                   AuthPrimaryButton(
                     title: 'Login',
                     loading: ctrl.loginLoading,

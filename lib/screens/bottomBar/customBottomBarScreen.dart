@@ -107,7 +107,7 @@ class _CustomBottomBarScreenState extends State<CustomBottomBarScreen>
               Image.asset(
                 "assets/images/categories.png",
                 color:
-                    currentPage == 2
+                    currentPage == 1
                         ? AppColors.whiteFFFFFF
                         : AppColors.black323536,
                 height: 24.h,
@@ -116,7 +116,7 @@ class _CustomBottomBarScreenState extends State<CustomBottomBarScreen>
               SvgPicture.asset(
                 "assets/images/setting-2.svg",
                 color:
-                    currentPage == 3
+                    currentPage == 2
                         ? AppColors.whiteFFFFFF
                         : AppColors.black323536,
                 height: 24.h,

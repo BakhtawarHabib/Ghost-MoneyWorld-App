@@ -8,6 +8,7 @@ class AuthInputField extends StatelessWidget {
   final bool isPassword;
   final TextInputType keyboardType;
   final String? Function(String?)? validator;
+  final int maxLines;
 
   const AuthInputField({
     super.key,
@@ -16,6 +17,7 @@ class AuthInputField extends StatelessWidget {
     this.isPassword = false,
     this.keyboardType = TextInputType.text,
     this.validator,
+    this.maxLines = 1,
   });
 
   @override
@@ -25,6 +27,8 @@ class AuthInputField extends StatelessWidget {
       obscureText: isPassword,
       keyboardType: keyboardType,
       validator: validator,
+      maxLines: maxLines,
+      minLines: maxLines > 1 ? 3 : null,
       autovalidateMode: AutovalidateMode.onUserInteraction,
       style: const TextStyle(color: Colors.white),
       decoration: InputDecoration(
@@ -41,7 +45,10 @@ class AuthInputField extends StatelessWidget {
           borderRadius: BorderRadius.circular(10.r),
           borderSide: const BorderSide(color: AppColors.redFF2B3A),
         ),
-
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10.r),
+          borderSide: const BorderSide(color: AppColors.primaryColor),
+        ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10.r),
           borderSide: const BorderSide(color: AppColors.primaryColor),

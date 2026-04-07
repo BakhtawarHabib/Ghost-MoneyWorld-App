@@ -3,17 +3,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:ghost_money_world/models/categoryModel.dart';
+import 'package:ghost_money_world/models/live_stream_model.dart';
 import 'package:ghost_money_world/models/videoModel.dart';
 import 'package:ghost_money_world/screens/authScreens/widgets/video_login_prompt.dart';
-import 'package:ghost_money_world/screens/homeScreen/homeController.dart';
+import 'package:ghost_money_world/screens/homeScreen/live_streams_controller.dart';
+import 'package:ghost_money_world/screens/homeScreen/widgets/trending_creator_card.dart';
+import 'package:ghost_money_world/screens/homeScreen/widgets/trending_hero_banner.dart';
 import 'package:ghost_money_world/screens/splash/videoDetailScreen.dart';
 import 'package:shimmer/shimmer.dart';
-import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:ghost_money_world/config/utils.dart';
 import 'package:ghost_money_world/constants/text_helper.dart';
 import 'package:ghost_money_world/screens/categories/categoriesController.dart';
-
-class FeaturedController extends GetxController {}
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -23,14 +23,31 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final controller = Get.put(FeaturedController());
   // final ProfileController profileController = Get.put(ProfileController());
   final CategoriesController categoriesController = Get.put(
     CategoriesController(),
   );
 
-  final PageController pageController = PageController();
-  BannerController bannerController = Get.put(BannerController());
+  final LiveStreamsController liveStreamsController = Get.put(
+    LiveStreamsController(),
+  );
+
+  static const List<String> _trendingKeywords = [
+    "trending now",
+    "trending",
+    "featured",
+  ];
+
+  VideoModel? _firstTrendingVideo(CategoriesController ctrl) {
+    final trending = _findCategoryByKeywords(
+      ctrl.categories,
+      _trendingKeywords,
+    );
+    if (trending == null) return null;
+    final list = ctrl.categoryVideos[trending.id] ?? [];
+    if (list.isEmpty) return null;
+    return list.first;
+  }
 
   String _normalized(String value) => value.toLowerCase().trim();
 
@@ -100,171 +117,71 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
         ],
-
-        // title: SizedBox(
-        //   height: 40.h,
-        //   child: TextFormField(
-        //     style: const TextStyle(color: Colors.white),
-        //     decoration: InputDecoration(
-        //       hintText: "Search",
-        //       hintStyle: TextStyle(
-        //         color: Colors.black,
-        //         fontSize: 15.sp,
-        //         fontFamily: 'Nunito',
-        //       ),
-        //       counterText: "",
-        //       fillColor: AppColors.primaryColor,
-        //       filled: true,
-        //       contentPadding: EdgeInsets.only(top: 0, left: 10),
-        //       border: _border(),
-        //       enabledBorder: _border(),
-        //       focusedBorder: _border(),
-        //     ),
-        //   ),
-        // ),
-        // actions: [
-        //   GetBuilder<ProfileController>(
-        //     builder: (ctrl) {
-        //       return Padding(
-        //         padding: const EdgeInsets.all(10.0),
-        //         child:
-        //             ctrl.photoUrl != null
-        //                 ? ClipRRect(
-        //                   borderRadius: BorderRadius.circular(100),
-        //                   child: CachedNetworkImage(
-        //                     imageUrl: ctrl.photoUrl!,
-        //                     height: 50.h,
-        //                     width: 50.h,
-        //                     fit: BoxFit.cover,
-        //                     placeholder:
-        //                         (context, url) => Container(
-        //                           height: 50.h,
-        //                           alignment: Alignment.center,
-        //                           child: const CircularProgressIndicator(
-        //                             color: AppColors.primaryColor,
-        //                           ),
-        //                         ),
-        //                     errorWidget:
-        //                         (context, url, error) => Container(
-        //                           height: 50.h,
-        //                           width: 50.w,
-        //                           decoration: const BoxDecoration(
-        //                             shape: BoxShape.circle,
-        //                             color: AppColors.primaryColor,
-        //                           ),
-        //                           child: Icon(
-        //                             Icons.person,
-        //                             size: 30.sp,
-        //                             color: AppColors.black000000,
-        //                           ),
-        //                         ),
-        //                   ),
-        //                 )
-        //                 : SizedBox(),
-        //       );
-        //     },
-        //   ),
-        // ],
       ),
 
-      // drawer: Drawer(
-      //   backgroundColor: Colors.black,
-      //   child: ListView(
-      //     children: <Widget>[
-      //       GetBuilder<ProfileController>(
-      //         builder: (ctrl) {
-      //           return UserAccountsDrawerHeader(
-      //             decoration: BoxDecoration(color: Colors.black),
-      //             accountName: customText(
-      //               text: ctrl.name ?? '',
-      //               fontWeight: FontWeight.w700,
-      //               fontSize: 16.sp,
-      //             ),
-      //             accountEmail: customText(
-      //               text: ctrl.email ?? '',
-      //               fontWeight: FontWeight.w500,
-      //               fontSize: 13.sp,
-      //             ),
-      //             currentAccountPicture: CircleAvatar(
-      //               backgroundColor: Colors.grey[300],
-      //               backgroundImage:
-      //                   (ctrl.photoUrl != null && ctrl.photoUrl!.isNotEmpty)
-      //                       ? CachedNetworkImageProvider(ctrl.photoUrl!)
-      //                       : const AssetImage("assets/images/logo.png")
-      //                           as ImageProvider,
-      //             ),
-      //           );
-      //         },
-      //       ),
-
-      //       ListTile(
-      //         leading: SvgPicture.asset(
-      //           "assets/images/account_icon.svg",
-      //           color: AppColors.whiteFFFFFF,
-      //           height: 22.h,
-      //           width: 22.w,
-      //         ),
-      //         title: customText(
-      //           text: "Profile",
-      //           color: AppColors.whiteFFFFFF,
-      //           fontSize: 16.sp,
-      //         ),
-      //       ),
-      //       ListTile(
-      //         leading: SvgPicture.asset(
-      //           "assets/images/live_icon.svg",
-      //           color: AppColors.whiteFFFFFF,
-      //           height: 22.h,
-      //           width: 22.w,
-      //         ),
-      //         title: customText(
-      //           text: "Live",
-      //           color: AppColors.whiteFFFFFF,
-      //           fontSize: 16.sp,
-      //         ),
-      //       ),
-      //     ],
-      //   ),
-      // ),
       body: SafeArea(
         child: ListView(
           children: [
-            GetBuilder<BannerController>(
+            GetBuilder<CategoriesController>(
               builder: (ctrl) {
                 if (ctrl.loading) {
-                  return Shimmer.fromColors(
-                    baseColor: Colors.grey.shade800,
-                    highlightColor: Colors.grey.shade700,
-                    child: Container(
-                      width: Get.width,
-                      height: 180.h,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(30.r),
-                        color: Colors.grey.shade900,
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: AspectRatio(
+                        aspectRatio: 16 / 9,
+                        child: Shimmer.fromColors(
+                          baseColor: Colors.grey.shade800,
+                          highlightColor: Colors.grey.shade700,
+                          child: ColoredBox(color: Colors.grey.shade900),
+                        ),
                       ),
                     ),
                   );
                 }
-                if (ctrl.bannerUrls.isEmpty) {
+                final first = _firstTrendingVideo(ctrl);
+                if (first == null) {
                   return SizedBox(
-                    height: 180,
+                    height: 120.h,
                     child: Center(
                       child: customText(
-                        text: "No banners found",
-                        color: Colors.white,
+                        text: "No featured video yet",
+                        color: Colors.white70,
                       ),
                     ),
                   );
                 }
-
-                return FeaturedHeroBanner(
-                  pageController: pageController,
-                  urls: ctrl.bannerUrls,
-                );
+                return TrendingHeroBanner(video: first);
               },
             ),
 
             size16h,
+
+            GetBuilder<LiveStreamsController>(
+              builder: (liveCtrl) {
+                if (liveCtrl.loading) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Shimmer.fromColors(
+                      baseColor: Colors.grey.shade800,
+                      highlightColor: Colors.grey.shade700,
+                      child: Container(
+                        height: 136.h,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10),
+                          color: Colors.grey.shade900,
+                        ),
+                      ),
+                    ),
+                  );
+                }
+                if (liveCtrl.streams.isEmpty) {
+                  return const SizedBox.shrink();
+                }
+                return _LiveNowSection(streams: liveCtrl.streams);
+              },
+            ),
 
             GetBuilder<CategoriesController>(
               builder: (ctrl) {
@@ -283,17 +200,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   );
                 }
 
-                final live = _findCategoryByKeywords(ctrl.categories, [
-                  "live now",
-                  "live",
-                  "livestream",
-                ]);
-
-                final trending = _findCategoryByKeywords(ctrl.categories, [
-                  "trending now",
-                  "trending",
-                  "featured",
-                ]);
+                final trending = _findCategoryByKeywords(
+                  ctrl.categories,
+                  _trendingKeywords,
+                );
 
                 final creatorSpotlight =
                     _findCategoryByKeywords(ctrl.categories, [
@@ -303,24 +213,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       "movies & shows",
                     ]);
 
-                final usedCategoryIds = {
-                  if (live != null) live.id,
-                  if (trending != null) trending.id,
-                  if (creatorSpotlight != null) creatorSpotlight.id,
-                };
-                final continueCategory = ctrl.categories.firstWhereOrNull(
-                  (c) => !usedCategoryIds.contains(c.id),
-                );
-
                 return Column(
                   children: [
-                    if (live != null)
-                      _LiveNowSection(
-                        videos: ctrl.categoryVideos[live.id] ?? [],
-                      ),
-
-                    size15h,
-
                     if (trending != null)
                       _PosterStripSection(
                         title: "Trending Now",
@@ -353,121 +247,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-class FeaturedHeroBanner extends StatelessWidget {
-  final PageController pageController;
-  final List<String> urls;
-
-  const FeaturedHeroBanner({
-    super.key,
-    required this.pageController,
-    required this.urls,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        SizedBox(
-          height: 220.h,
-          child: PageView.builder(
-            controller: pageController,
-            itemCount: urls.length,
-            itemBuilder: (context, index) {
-              return Container(
-                margin: const EdgeInsets.symmetric(horizontal: 10),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16.r),
-                  image: DecorationImage(
-                    image: CachedNetworkImageProvider(urls[index]),
-                    fit: BoxFit.cover,
-                  ),
-                ),
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16.r),
-                    gradient: LinearGradient(
-                      begin: Alignment.bottomCenter,
-                      end: Alignment.topCenter,
-                      colors: [
-                        Colors.black.withValues(alpha: 0.7),
-                        Colors.transparent,
-                      ],
-                    ),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        customText(
-                          text: "Watch Now",
-                          color: Colors.white,
-                          fontSize: 12.sp,
-                        ),
-                        size8h,
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 14,
-                                vertical: 8,
-                              ),
-                              decoration: BoxDecoration(
-                                color: const Color(0xfff4b304),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: customText(
-                                text: "Watch Now",
-                                color: Colors.black,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            SizedBox(width: 8.w),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 14,
-                                vertical: 8,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.18),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: customText(
-                                text: "Add to List",
-                                color: Colors.white,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-
-        Padding(
-          padding: const EdgeInsets.only(top: 10.0),
-          child: SmoothPageIndicator(
-            controller: pageController,
-            count: urls.length,
-            effect: ExpandingDotsEffect(
-              dotWidth: 8.0,
-              dotHeight: 8.0,
-              activeDotColor: Colors.white,
-              dotColor: Colors.white.withValues(alpha: 0.4),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
 class _HomeSectionHeader extends StatelessWidget {
   final String title;
   const _HomeSectionHeader({required this.title});
@@ -493,8 +272,8 @@ class _HomeSectionHeader extends StatelessWidget {
 }
 
 class _LiveNowSection extends StatelessWidget {
-  final List<VideoModel> videos;
-  const _LiveNowSection({required this.videos});
+  final List<LiveStreamModel> streams;
+  const _LiveNowSection({required this.streams});
 
   @override
   Widget build(BuildContext context) {
@@ -507,21 +286,25 @@ class _LiveNowSection extends StatelessWidget {
           child: ListView.builder(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             scrollDirection: Axis.horizontal,
-            itemCount: videos.length,
+            itemCount: streams.length,
             itemBuilder: (context, index) {
-              final video = videos[index];
+              final stream = streams[index];
+              final badgeText = 'LIVE';
+              final badgeColor = stream.isLiveNow ? Colors.red : Colors.red;
               return GestureDetector(
                 onTap: () {
                   VideoLoginPrompt.guardVideoAccess(
                     onAuthorized: () {
                       Get.to(
                         () => VideoDetailPage(
-                          id: video.id,
-                          title: video.title,
-                          description: video.description,
-                          categoryId: video.category,
-                          videoUrl: video.resolvedVideoUrl,
-                          thumbnail: video.resolvedThumbnail,
+                          id: stream.id,
+                          title: stream.title,
+                          description: stream.description,
+                          categoryId: '',
+                          videoUrl: stream.hlsUrl,
+                          thumbnail: stream.thumbnailUrl,
+                          isLiveStream: true,
+                          liveStreamStatus: stream.status,
                         ),
                       );
                     },
@@ -540,7 +323,7 @@ class _LiveNowSection extends StatelessWidget {
                             children: [
                               Positioned.fill(
                                 child: CachedNetworkImage(
-                                  imageUrl: video.resolvedThumbnail,
+                                  imageUrl: stream.thumbnailUrl,
                                   fit: BoxFit.cover,
                                   errorWidget:
                                       (_, __, ___) => Container(
@@ -557,13 +340,13 @@ class _LiveNowSection extends StatelessWidget {
                                     vertical: 2,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: Colors.red,
+                                    color: badgeColor,
                                     borderRadius: BorderRadius.circular(5),
                                   ),
                                   child: customText(
-                                    text: "LIVE",
+                                    text: badgeText,
                                     color: Colors.white,
-                                    fontSize: 10.sp,
+                                    fontSize: 12.sp,
                                     fontWeight: FontWeight.w700,
                                   ),
                                 ),
@@ -574,7 +357,7 @@ class _LiveNowSection extends StatelessWidget {
                       ),
                       SizedBox(height: 4.h),
                       customText(
-                        text: video.title,
+                        text: stream.title,
                         color: Colors.white,
                         fontWeight: FontWeight.w700,
                         maxLines: 1,
@@ -586,6 +369,7 @@ class _LiveNowSection extends StatelessWidget {
             },
           ),
         ),
+        size15h,
       ],
     );
   }
@@ -603,43 +387,33 @@ class _PosterStripSection extends StatelessWidget {
         _HomeSectionHeader(title: title),
         SizedBox(height: 10.h),
         SizedBox(
-          height: 175.h,
+          height: 240.h,
           child: ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 10),
             scrollDirection: Axis.horizontal,
             itemCount: videos.length,
             itemBuilder: (context, index) {
               final video = videos[index];
-              return GestureDetector(
-                onTap: () {
-                  VideoLoginPrompt.guardVideoAccess(
-                    onAuthorized: () {
-                      Get.to(
-                        () => VideoDetailPage(
-                          id: video.id,
-                          title: video.title,
-                          description: video.description,
-                          categoryId: video.category,
-                          videoUrl: video.resolvedVideoUrl,
-                          thumbnail: video.resolvedThumbnail,
-                        ),
-                      );
-                    },
-                  );
-                },
-                child: Container(
-                  width: 125.w,
-                  margin: const EdgeInsets.symmetric(horizontal: 5),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
-                    child: CachedNetworkImage(
-                      imageUrl: video.resolvedThumbnail,
-                      fit: BoxFit.cover,
-                      errorWidget:
-                          (_, __, ___) =>
-                              Container(color: Colors.grey.shade800),
-                    ),
-                  ),
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6),
+                child: TrendingCreatorCard(
+                  video: video,
+                  onTap: () {
+                    VideoLoginPrompt.guardVideoAccess(
+                      onAuthorized: () {
+                        Get.to(
+                          () => VideoDetailPage(
+                            id: video.id,
+                            title: video.title,
+                            description: video.description,
+                            categoryId: video.category,
+                            videoUrl: video.resolvedVideoUrl,
+                            thumbnail: video.resolvedThumbnail,
+                          ),
+                        );
+                      },
+                    );
+                  },
                 ),
               );
             },

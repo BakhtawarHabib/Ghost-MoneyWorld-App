@@ -6,9 +6,15 @@ import 'package:ghost_money_world/models/categoryModel.dart';
 import 'package:ghost_money_world/models/live_stream_model.dart';
 import 'package:ghost_money_world/models/videoModel.dart';
 import 'package:ghost_money_world/screens/authScreens/widgets/video_login_prompt.dart';
+import 'package:ghost_money_world/screens/categories/categoriesScreen.dart';
 import 'package:ghost_money_world/screens/homeScreen/live_streams_controller.dart';
 import 'package:ghost_money_world/screens/homeScreen/widgets/trending_creator_card.dart';
 import 'package:ghost_money_world/screens/homeScreen/widgets/trending_hero_banner.dart';
+import 'package:ghost_money_world/screens/profile/change_password_screen.dart';
+import 'package:ghost_money_world/screens/profile/profileController.dart';
+import 'package:ghost_money_world/screens/profile/profileScreen.dart';
+import 'package:ghost_money_world/screens/settings/settingController.dart';
+import 'package:ghost_money_world/screens/settings/settingPage.dart';
 import 'package:ghost_money_world/screens/splash/videoDetailScreen.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:ghost_money_world/config/utils.dart';
@@ -23,14 +29,17 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  // final ProfileController profileController = Get.put(ProfileController());
+  late final ProfileController profileController = Get.put(ProfileController());
   final CategoriesController categoriesController = Get.put(
     CategoriesController(),
   );
-
   final LiveStreamsController liveStreamsController = Get.put(
     LiveStreamsController(),
   );
+  late final SettingPagesController settingPagesController =
+      Get.isRegistered<SettingPagesController>()
+          ? Get.find<SettingPagesController>()
+          : Get.put(SettingPagesController());
 
   static const List<String> _trendingKeywords = [
     "trending now",
@@ -65,7 +74,8 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     Future.delayed(Duration.zero, () {
-      // profileController.fetchProfile();
+      profileController.fetchProfile();
+      settingPagesController.fetchData();
     });
   }
 
@@ -73,47 +83,49 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
+      drawer: _buildDrawer(),
 
       appBar: AppBar(
         toolbarHeight: 70,
         backgroundColor: Colors.black,
-        leading: IconButton(
-          onPressed: () => Scaffold.of(context).openDrawer(),
-          icon: Icon(Icons.menu, color: Colors.white, size: 24.sp),
+        leading: Builder(
+          builder:
+              (appBarContext) => IconButton(
+                onPressed: () {
+                  final scaffold = Scaffold.maybeOf(appBarContext);
+                  if (scaffold != null && scaffold.hasDrawer) {
+                    scaffold.openDrawer();
+                  }
+                },
+                icon: Icon(Icons.menu, color: Colors.white, size: 24.sp),
+              ),
         ),
         titleSpacing: 0,
         title: Image.asset('assets/images/logo.png', height: 34.h),
         actions: [
-          Stack(
-            clipBehavior: Clip.none,
-            children: [
-              IconButton(
-                onPressed: () {},
-                icon: Icon(
-                  Icons.notifications_none_rounded,
-                  color: Colors.white,
-                  size: 24.sp,
-                ),
-              ),
-              Positioned(
-                right: 9,
-                top: 9,
-                child: Container(
-                  width: 8.w,
-                  height: 8.h,
-                  decoration: const BoxDecoration(
-                    color: Colors.red,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-              ),
-            ],
-          ),
           Padding(
             padding: const EdgeInsets.only(right: 12),
-            child: CircleAvatar(
-              radius: 15.r,
-              backgroundImage: const AssetImage('assets/images/logo.png'),
+            child: GetBuilder<ProfileController>(
+              init:
+                  Get.isRegistered<ProfileController>()
+                      ? Get.find<ProfileController>()
+                      : Get.put(ProfileController()),
+              builder: (profileCtrl) {
+                final avatar = profileCtrl.avatarImageProvider();
+                return CircleAvatar(
+                  radius: 20.r,
+                  backgroundColor: Colors.white12,
+                  backgroundImage: avatar,
+                  child:
+                      avatar == null
+                          ? Icon(
+                            Icons.person,
+                            size: 20.sp,
+                            color: Colors.white70,
+                          )
+                          : null,
+                );
+              },
             ),
           ),
         ],
@@ -241,6 +253,191 @@ class _HomeScreenState extends State<HomeScreen> {
               },
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDrawer() {
+    return Drawer(
+      backgroundColor: const Color(0xFF111111),
+      child: SafeArea(
+        child: GetBuilder<ProfileController>(
+          init:
+              Get.isRegistered<ProfileController>()
+                  ? Get.find<ProfileController>()
+                  : Get.put(ProfileController()),
+          builder: (profileCtrl) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.fromLTRB(16.w, 18.h, 16.w, 14.h),
+                  decoration: const BoxDecoration(
+                    border: Border(
+                      bottom: BorderSide(color: Colors.white12, width: 1),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 25.r,
+                        backgroundColor: Colors.white12,
+                        backgroundImage: profileCtrl.avatarImageProvider(),
+                        child:
+                            profileCtrl.avatarImageProvider() == null
+                                ? Icon(
+                                  Icons.person,
+                                  color: Colors.white70,
+                                  size: 24.sp,
+                                )
+                                : null,
+                      ),
+                      SizedBox(width: 12.w),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            customText(
+                              text:
+                                  profileCtrl.name.isEmpty
+                                      ? 'Ghost Money User'
+                                      : profileCtrl.name,
+                              color: Colors.white,
+                              fontSize: 16.sp,
+                              fontWeight: FontWeight.w700,
+                              maxLines: 1,
+                            ),
+                            SizedBox(height: 2.h),
+                            customText(
+                              text:
+                                  profileCtrl.email.isEmpty
+                                      ? 'Manage your account'
+                                      : profileCtrl.email,
+                              color: Colors.white70,
+                              fontSize: 12.sp,
+                              maxLines: 1,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 10.h),
+                _drawerTile(
+                  icon: Icons.explore_outlined,
+                  title: 'Discover',
+                  onTap: () => Get.back(),
+                ),
+                _drawerTile(
+                  icon: Icons.category_outlined,
+                  title: 'Categories',
+                  onTap: () {
+                    Get.back();
+                    Get.to(() => CategoriesScreen());
+                  },
+                ),
+                _drawerTile(
+                  icon: Icons.person_outline,
+                  title: 'My Profile',
+                  onTap: () {
+                    Get.back();
+                    Get.to(() => const ProfileScreen());
+                  },
+                ),
+                _drawerTile(
+                  icon: Icons.lock_outline,
+                  title: 'Change Password',
+                  onTap: () {
+                    Get.back();
+                    if (!profileCtrl.canChangePassword) {
+                      VideoLoginPrompt.guardEditProfileAccess(
+                        onAuthorized: () {},
+                      );
+                      return;
+                    }
+                    Get.to(() => const ChangePasswordScreen());
+                  },
+                ),
+                _drawerTile(
+                  icon: Icons.privacy_tip_outlined,
+                  title: 'Privacy Policy',
+                  onTap: () {
+                    Get.back();
+                    Get.to(
+                      () => SettingPage(
+                        title: 'Privacy Policy',
+                        text: settingPagesController.privacyText,
+                      ),
+                    );
+                  },
+                ),
+                _drawerTile(
+                  icon: Icons.description_outlined,
+                  title: 'Terms & Conditions',
+                  onTap: () {
+                    Get.back();
+                    Get.to(
+                      () => SettingPage(
+                        title: 'Terms & Condition',
+                        text: settingPagesController.termsText,
+                      ),
+                    );
+                  },
+                ),
+                const Spacer(),
+                const Divider(color: Colors.white12, height: 1),
+                _drawerTile(
+                  icon: Icons.logout,
+                  title: 'Logout',
+                  titleColor: Colors.redAccent,
+                  onTap: () {
+                    Get.back();
+                    profileController.logout();
+                  },
+                ),
+                SizedBox(height: 10.h),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _drawerTile({
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+    Color titleColor = Colors.white,
+  }) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 2.h),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12.r),
+          onTap: onTap,
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 12.h),
+            child: Row(
+              children: [
+                Icon(icon, size: 21.sp, color: Colors.white70),
+                SizedBox(width: 12.w),
+                Expanded(
+                  child: customText(
+                    text: title,
+                    color: titleColor,
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                Icon(Icons.chevron_right, color: Colors.white24, size: 20.sp),
+              ],
+            ),
+          ),
         ),
       ),
     );

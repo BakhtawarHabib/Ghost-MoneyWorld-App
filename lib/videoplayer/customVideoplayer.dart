@@ -42,25 +42,24 @@ class _ModernVideoPlayerState extends State<ModernVideoPlayer> {
 
   void _togglePlay() {
     setState(() {
-      _controller.value.isPlaying
-          ? _controller.pause()
-          : _controller.play();
+      _controller.value.isPlaying ? _controller.pause() : _controller.play();
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return AspectRatio(
-      aspectRatio: _controller.value.isInitialized
-          ? _controller.value.aspectRatio
-          : 16 / 9,
+      aspectRatio:
+          _controller.value.isInitialized
+              ? _controller.value.aspectRatio
+              : 16 / 9,
       child: Stack(
         children: [
           _controller.value.isInitialized
               ? GestureDetector(
-                  onTap: _toggleControls,
-                  child: VideoPlayer(_controller),
-                )
+                onTap: _toggleControls,
+                child: VideoPlayer(_controller),
+              )
               : Image.network(widget.thumbnail, fit: BoxFit.cover),
 
           if (_showControls)
@@ -101,7 +100,9 @@ class _ModernVideoPlayerState extends State<ModernVideoPlayer> {
                           color: Colors.white,
                           onPressed: () {
                             final pos = _controller.value.position;
-                            _controller.seekTo(pos - const Duration(seconds: 10));
+                            _controller.seekTo(
+                              pos - const Duration(seconds: 10),
+                            );
                           },
                         ),
                         const SizedBox(width: 20),
@@ -110,7 +111,9 @@ class _ModernVideoPlayerState extends State<ModernVideoPlayer> {
                           color: Colors.white,
                           onPressed: () {
                             final pos = _controller.value.position;
-                            _controller.seekTo(pos + const Duration(seconds: 10));
+                            _controller.seekTo(
+                              pos + const Duration(seconds: 10),
+                            );
                           },
                         ),
                         const SizedBox(width: 20),

@@ -1,24 +1,38 @@
+import 'package:flutter/foundation.dart';
 import 'package:ghost_money_world/ads/adsHelper.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 class AdsService {
+  static bool _isInitialized = false;
   static BannerAd? banner;
   static InterstitialAd? interstitialAd;
   static RewardedAd? rewardedAd;
+  static bool _isInterstitialLoading = false;
+  static bool _isRewardedLoading = false;
 
-  static void loadBanner() {
+  static Future<void> initialize() async {
+    if (_isInitialized) return;
+    await MobileAds.instance.initialize();
+    _isInitialized = true;
+  }
+
+  static void loadBanner({
+    VoidCallback? onLoaded,
+    void Function(LoadAdError error)? onFailedToLoad,
+  }) {
+    banner?.dispose();
     banner = BannerAd(
       adUnitId: AdHelper.bannerAdUnitId,
       size: AdSize.banner,
       request: const AdRequest(),
       listener: BannerAdListener(
         onAdLoaded: (ad) {
-          print("BANNER LOADED SUCCESSFULLY");
+          onLoaded?.call();
         },
         onAdFailedToLoad: (ad, error) {
-          print("BANNER FAILED: ${error.message}");
           banner = null;
           ad.dispose();
+          onFailedToLoad?.call(error);
         },
       ),
     );
@@ -27,100 +41,91 @@ class AdsService {
   }
 
   static void loadInterstitial() {
+    if (_isInterstitialLoading || interstitialAd != null) return;
+    _isInterstitialLoading = true;
     InterstitialAd.load(
       adUnitId: AdHelper.interstitialAdUnitId,
       request: const AdRequest(),
       adLoadCallback: InterstitialAdLoadCallback(
         onAdLoaded: (ad) {
-          print("INTERSTITIAL LOADED");
+          _isInterstitialLoading = false;
           interstitialAd = ad;
         },
         onAdFailedToLoad: (error) {
-          print("INTERSTITIAL FAILED: ${error.message}");
+          _isInterstitialLoading = false;
           interstitialAd = null;
         },
       ),
     );
   }
 
-  static void showInterstitial(Function afterAd) {
+  static void showInterstitial(VoidCallback afterAd) {
     if (interstitialAd != null) {
-      interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
+      final ad = interstitialAd!;
+      interstitialAd = null;
+      ad.fullScreenContentCallback = FullScreenContentCallback(
         onAdDismissedFullScreenContent: (ad) {
           ad.dispose();
-          interstitialAd = null;
           loadInterstitial();
           afterAd();
         },
         onAdFailedToShowFullScreenContent: (ad, error) {
           ad.dispose();
-          interstitialAd = null;
           loadInterstitial();
           afterAd();
         },
       );
-
-      interstitialAd!.show();
+      ad.show();
     } else {
       loadInterstitial();
-
-      Future.delayed(const Duration(milliseconds: 500), () {
-        if (interstitialAd != null) {
-          showInterstitial(afterAd);
-        } else {
-          afterAd();
-        }
-      });
+      afterAd();
     }
   }
 
   static void loadRewarded() {
+    if (_isRewardedLoading || rewardedAd != null) return;
+    _isRewardedLoading = true;
     RewardedAd.load(
       adUnitId: AdHelper.rewardedAdUnitId,
       request: const AdRequest(),
       rewardedAdLoadCallback: RewardedAdLoadCallback(
         onAdLoaded: (ad) {
-          print("REWARDED LOADED");
+          _isRewardedLoading = false;
           rewardedAd = ad;
         },
         onAdFailedToLoad: (error) {
-          print("REWARDED FAILED: ${error.message}");
+          _isRewardedLoading = false;
           rewardedAd = null;
         },
       ),
     );
   }
 
-  static void showRewardedBeforePlay(Function onComplete) {
+  static void showRewardedBeforePlay(VoidCallback onComplete) {
     if (rewardedAd != null) {
-      rewardedAd!.fullScreenContentCallback = FullScreenContentCallback(
+      final ad = rewardedAd!;
+      rewardedAd = null;
+      ad.fullScreenContentCallback = FullScreenContentCallback(
         onAdDismissedFullScreenContent: (ad) {
           ad.dispose();
-          rewardedAd = null;
           loadRewarded();
           onComplete();
         },
         onAdFailedToShowFullScreenContent: (ad, error) {
           ad.dispose();
-          rewardedAd = null;
           loadRewarded();
           onComplete();
         },
       );
-
-      rewardedAd!.show(onUserEarnedReward: (ad, reward) {});
-
-      rewardedAd = null;
+      ad.show(onUserEarnedReward: (ad, reward) {});
     } else {
       loadRewarded();
-
-      Future.delayed(const Duration(milliseconds: 600), () {
-        if (rewardedAd != null) {
-          showRewardedBeforePlay(onComplete);
-        } else {
-          onComplete();
-        }
-      });
+      onComplete();
     }
+  }
+
+  static void disposeBanner() {
+    banner?.dispose();
+    banner = null;
   }
 }

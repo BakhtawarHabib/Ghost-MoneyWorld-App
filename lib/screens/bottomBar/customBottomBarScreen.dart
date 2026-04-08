@@ -3,10 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_floating_bottom_bar/flutter_floating_bottom_bar.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:ghost_money_world/ads/adsService.dart';
 import 'package:ghost_money_world/constants/app_colors.dart';
 import 'package:ghost_money_world/screens/homeScreen.dart';
 import 'package:ghost_money_world/screens/profile/profileScreen.dart';
 import 'package:ghost_money_world/screens/categories/categoriesScreen.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import 'package:svg_flutter/svg.dart';
 
@@ -22,8 +24,11 @@ class CustomBottomBarScreen extends StatefulWidget {
 
 class _CustomBottomBarScreenState extends State<CustomBottomBarScreen>
     with SingleTickerProviderStateMixin {
+  static const double _bannerHeight = 50;
+
   late TabController tabController;
   late int currentPage;
+  bool _isBannerLoaded = false;
 
   final List<Widget> pages = [
     const HomeScreen(),
@@ -48,10 +53,26 @@ class _CustomBottomBarScreenState extends State<CustomBottomBarScreen>
         currentPage = tabController.index;
       });
     });
+
+    AdsService.loadBanner(
+      onLoaded: () {
+        if (!mounted) return;
+        setState(() {
+          _isBannerLoaded = true;
+        });
+      },
+      onFailedToLoad: (_) {
+        if (!mounted) return;
+        setState(() {
+          _isBannerLoaded = false;
+        });
+      },
+    );
   }
 
   @override
   void dispose() {
+    AdsService.disposeBanner();
     tabController.dispose();
     super.dispose();
   }
@@ -65,7 +86,7 @@ class _CustomBottomBarScreenState extends State<CustomBottomBarScreen>
         hideOnScroll: true,
         showIcon: false,
         reverse: false,
-        offset: 10,
+        offset: _isBannerLoaded ? 4 : 10,
         barColor: AppColors.primaryColor,
         borderRadius: BorderRadius.circular(30),
         width: Get.width,
@@ -95,15 +116,7 @@ class _CustomBottomBarScreenState extends State<CustomBottomBarScreen>
                 height: 24.h,
                 width: 24.w,
               ),
-              // SvgPicture.asset(
-              //   "assets/images/live_icon.svg",
-              //   color:
-              //       currentPage == 1
-              //           ? AppColors.whiteFFFFFF
-              //           : AppColors.black323536,
-              //   height: 24.h,
-              //   width: 24.w,
-              // ),
+
               Image.asset(
                 "assets/images/categories.png",
                 color:
@@ -124,6 +137,28 @@ class _CustomBottomBarScreenState extends State<CustomBottomBarScreen>
               ),
             ],
           ),
+        ),
+      ),
+      bottomNavigationBar: _buildBottomBanner(),
+    );
+  }
+
+  Widget _buildBottomBanner() {
+    final banner = AdsService.banner;
+    if (!_isBannerLoaded || banner == null) {
+      return const SizedBox.shrink();
+    }
+    return SafeArea(
+      top: false,
+      child: Container(
+        color: Colors.black,
+        width: double.infinity,
+        height: _bannerHeight,
+        alignment: Alignment.center,
+        child: SizedBox(
+          width: banner.size.width.toDouble(),
+          height: banner.size.height.toDouble(),
+          child: AdWidget(ad: banner),
         ),
       ),
     );

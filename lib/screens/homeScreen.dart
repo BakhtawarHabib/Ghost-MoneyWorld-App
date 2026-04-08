@@ -16,6 +16,7 @@ import 'package:ghost_money_world/screens/profile/profileScreen.dart';
 import 'package:ghost_money_world/screens/settings/settingController.dart';
 import 'package:ghost_money_world/screens/settings/settingPage.dart';
 import 'package:ghost_money_world/screens/splash/videoDetailScreen.dart';
+import 'package:ghost_money_world/ads/adsService.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:ghost_money_world/config/utils.dart';
 import 'package:ghost_money_world/constants/text_helper.dart';
@@ -77,6 +78,12 @@ class _HomeScreenState extends State<HomeScreen> {
       profileController.fetchProfile();
       settingPagesController.fetchData();
     });
+    AdsService.loadInterstitial();
+    AdsService.loadRewarded();
+  }
+
+  void _openVideoWithAd(VoidCallback onOpen) {
+    AdsService.showInterstitial(onOpen);
   }
 
   @override
@@ -191,7 +198,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 if (liveCtrl.streams.isEmpty) {
                   return const SizedBox.shrink();
                 }
-                return _LiveNowSection(streams: liveCtrl.streams);
+                return _LiveNowSection(
+                  streams: liveCtrl.streams,
+                  onVideoTapWithAd: _openVideoWithAd,
+                );
               },
             ),
 
@@ -231,6 +241,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       _PosterStripSection(
                         title: "Trending Now",
                         videos: ctrl.categoryVideos[trending.id] ?? [],
+                        onVideoTapWithAd: _openVideoWithAd,
                       ),
 
                     size15h,
@@ -239,6 +250,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       _PosterStripSection(
                         title: "Creator Spotlight",
                         videos: ctrl.categoryVideos[creatorSpotlight.id] ?? [],
+                        onVideoTapWithAd: _openVideoWithAd,
                       ),
 
                     size15h,
@@ -470,7 +482,8 @@ class _HomeSectionHeader extends StatelessWidget {
 
 class _LiveNowSection extends StatelessWidget {
   final List<LiveStreamModel> streams;
-  const _LiveNowSection({required this.streams});
+  final ValueChanged<VoidCallback>? onVideoTapWithAd;
+  const _LiveNowSection({required this.streams, this.onVideoTapWithAd});
 
   @override
   Widget build(BuildContext context) {
@@ -490,22 +503,42 @@ class _LiveNowSection extends StatelessWidget {
               final badgeColor = stream.isLiveNow ? Colors.red : Colors.red;
               return GestureDetector(
                 onTap: () {
-                  VideoLoginPrompt.guardVideoAccess(
-                    onAuthorized: () {
-                      Get.to(
-                        () => VideoDetailPage(
-                          id: stream.id,
-                          title: stream.title,
-                          description: stream.description,
-                          categoryId: '',
-                          videoUrl: stream.hlsUrl,
-                          thumbnail: stream.thumbnailUrl,
-                          isLiveStream: true,
-                          liveStreamStatus: stream.status,
-                        ),
-                      );
-                    },
-                  );
+                  onVideoTapWithAd?.call(() {
+                    VideoLoginPrompt.guardVideoAccess(
+                      onAuthorized: () {
+                        Get.to(
+                          () => VideoDetailPage(
+                            id: stream.id,
+                            title: stream.title,
+                            description: stream.description,
+                            categoryId: '',
+                            videoUrl: stream.hlsUrl,
+                            thumbnail: stream.thumbnailUrl,
+                            isLiveStream: true,
+                            liveStreamStatus: stream.status,
+                          ),
+                        );
+                      },
+                    );
+                  });
+                  if (onVideoTapWithAd == null) {
+                    VideoLoginPrompt.guardVideoAccess(
+                      onAuthorized: () {
+                        Get.to(
+                          () => VideoDetailPage(
+                            id: stream.id,
+                            title: stream.title,
+                            description: stream.description,
+                            categoryId: '',
+                            videoUrl: stream.hlsUrl,
+                            thumbnail: stream.thumbnailUrl,
+                            isLiveStream: true,
+                            liveStreamStatus: stream.status,
+                          ),
+                        );
+                      },
+                    );
+                  }
                 },
                 child: Container(
                   width: 170.w,
@@ -575,7 +608,12 @@ class _LiveNowSection extends StatelessWidget {
 class _PosterStripSection extends StatelessWidget {
   final String title;
   final List<VideoModel> videos;
-  const _PosterStripSection({required this.title, required this.videos});
+  final ValueChanged<VoidCallback>? onVideoTapWithAd;
+  const _PosterStripSection({
+    required this.title,
+    required this.videos,
+    this.onVideoTapWithAd,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -596,20 +634,38 @@ class _PosterStripSection extends StatelessWidget {
                 child: TrendingCreatorCard(
                   video: video,
                   onTap: () {
-                    VideoLoginPrompt.guardVideoAccess(
-                      onAuthorized: () {
-                        Get.to(
-                          () => VideoDetailPage(
-                            id: video.id,
-                            title: video.title,
-                            description: video.description,
-                            categoryId: video.category,
-                            videoUrl: video.resolvedVideoUrl,
-                            thumbnail: video.resolvedThumbnail,
-                          ),
-                        );
-                      },
-                    );
+                    onVideoTapWithAd?.call(() {
+                      VideoLoginPrompt.guardVideoAccess(
+                        onAuthorized: () {
+                          Get.to(
+                            () => VideoDetailPage(
+                              id: video.id,
+                              title: video.title,
+                              description: video.description,
+                              categoryId: video.category,
+                              videoUrl: video.resolvedVideoUrl,
+                              thumbnail: video.resolvedThumbnail,
+                            ),
+                          );
+                        },
+                      );
+                    });
+                    if (onVideoTapWithAd == null) {
+                      VideoLoginPrompt.guardVideoAccess(
+                        onAuthorized: () {
+                          Get.to(
+                            () => VideoDetailPage(
+                              id: video.id,
+                              title: video.title,
+                              description: video.description,
+                              categoryId: video.category,
+                              videoUrl: video.resolvedVideoUrl,
+                              thumbnail: video.resolvedThumbnail,
+                            ),
+                          );
+                        },
+                      );
+                    }
                   },
                 ),
               );

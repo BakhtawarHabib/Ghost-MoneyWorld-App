@@ -45,6 +45,7 @@ class CategoriesScreen extends StatelessWidget {
           }
 
           return ListView.builder(
+            padding: EdgeInsets.only(bottom: 130.h),
             itemCount: ctrl.categories.length,
             itemBuilder: (context, index) {
               final category = ctrl.categories[index];

@@ -1,9 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
+import 'package:ghost_money_world/constants/privacy_policy.dart';
 
 class SettingPagesController extends GetxController {
   String aboutText = "";
-  String privacyText = "";
+  String privacyText = kPrivacyPolicyText;
   String termsText = "";
 
   bool loading = true;
@@ -18,9 +19,6 @@ class SettingPagesController extends GetxController {
 
         if (data.containsKey("about")) {
           aboutText = data["about"];
-        }
-        if (data.containsKey("privacyPolicy")) {
-          privacyText = data["privacyPolicy"];
         }
         if (data.containsKey("termscondition")) {
           termsText = data["termscondition"];

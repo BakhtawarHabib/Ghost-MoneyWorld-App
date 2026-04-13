@@ -15,12 +15,15 @@ class CategoryModel {
 
   factory CategoryModel.fromMap(Map<String, dynamic> data, {String? docId}) {
     final firestoreDocId = (docId ?? '').toString();
+    final resolvedTitle =
+        (data['title'] ?? data['name'] ?? '').toString().trim();
     return CategoryModel(
       // Enforce Firestore document id as the primary category id.
       id: firestoreDocId,
       // Keep optional legacy/custom id from payload for backward visibility.
       legacyId: (data['id'] ?? '').toString(),
-      title: data['title'] ?? '',
+      // Support both "title" and "name" keys from Firestore payloads.
+      title: resolvedTitle,
       description: data['description'] ?? '',
       isActive: data['isActive'] ?? false,
     );

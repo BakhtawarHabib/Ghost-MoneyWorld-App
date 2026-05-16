@@ -103,9 +103,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
     try {
       final controller = VideoPlayerController.networkUrl(
         Uri.parse(widget.videoUrl),
-        videoPlayerOptions: VideoPlayerOptions(
-          mixWithOthers: true,
-        ),
+        videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true),
       );
       _videoController = controller;
       controller.addListener(_onVideoValueChanged);

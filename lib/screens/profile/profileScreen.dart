@@ -248,20 +248,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           color: AppColors.redFF2B3A,
                         ),
                         profileTile(
-                          
                           controller.logout,
                           "assets/images/logout_icon.svg",
                           "Logout",
                           color: AppColors.black000000.withValues(alpha: 0.8),
                         ),
                         SizedBox(height: 20.h),
-                        Center(
-                          child: customText(
-                            text: "Version 1.0.0",
-                            fontSize: 12.sp,
-                            color: Colors.grey,
-                          ),
-                        ),
+
                         size50h,
                       ],
                     );

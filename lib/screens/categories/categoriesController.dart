@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
+import 'package:ghost_money_world/ads/adsService.dart';
 import 'package:ghost_money_world/models/categoryModel.dart';
 import 'package:ghost_money_world/models/videoModel.dart';
 
@@ -11,6 +12,8 @@ class CategoriesController extends GetxController {
   @override
   void onInit() {
     fetchCategories();
+    AdsService.loadInterstitial();
+    AdsService.loadRewarded();
     super.onInit();
   }
 

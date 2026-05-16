@@ -5,6 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:ghost_money_world/ads/adsService.dart';
 import 'package:ghost_money_world/constants/app_colors.dart';
+import 'package:ghost_money_world/screens/feed/feed_screen.dart';
 import 'package:ghost_money_world/screens/homeScreen.dart';
 import 'package:ghost_money_world/screens/profile/profileScreen.dart';
 import 'package:ghost_money_world/screens/categories/categoriesScreen.dart';
@@ -24,15 +25,13 @@ class CustomBottomBarScreen extends StatefulWidget {
 
 class _CustomBottomBarScreenState extends State<CustomBottomBarScreen>
     with SingleTickerProviderStateMixin {
-  static const double _bannerHeight = 50;
-
   late TabController tabController;
   late int currentPage;
   bool _isBannerLoaded = false;
 
   final List<Widget> pages = [
     const HomeScreen(),
-    // const ComingSoonPage(),
+    const FeedScreen(),
     CategoriesScreen(),
     const ProfileScreen(),
   ];
@@ -54,20 +53,28 @@ class _CustomBottomBarScreenState extends State<CustomBottomBarScreen>
       });
     });
 
-    AdsService.loadBanner(
-      onLoaded: () {
-        if (!mounted) return;
-        setState(() {
-          _isBannerLoaded = true;
-        });
-      },
-      onFailedToLoad: (_) {
-        if (!mounted) return;
-        setState(() {
-          _isBannerLoaded = false;
-        });
-      },
-    );
+    AdsService.loadInterstitial();
+    AdsService.loadRewarded();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      final width = MediaQuery.sizeOf(context).width;
+      await AdsService.loadBanner(
+        width: width,
+        onLoaded: () {
+          if (!mounted) return;
+          setState(() {
+            _isBannerLoaded = true;
+          });
+        },
+        onFailedToLoad: (_) {
+          if (!mounted) return;
+          setState(() {
+            _isBannerLoaded = false;
+          });
+        },
+      );
+    });
   }
 
   @override
@@ -116,11 +123,18 @@ class _CustomBottomBarScreenState extends State<CustomBottomBarScreen>
                 height: 24.h,
                 width: 24.w,
               ),
-
+              Icon(
+                Icons.play_circle_outline_rounded,
+                color:
+                    currentPage == 1
+                        ? AppColors.whiteFFFFFF
+                        : AppColors.black323536,
+                size: 26.sp,
+              ),
               Image.asset(
                 "assets/images/categories.png",
                 color:
-                    currentPage == 1
+                    currentPage == 2
                         ? AppColors.whiteFFFFFF
                         : AppColors.black323536,
                 height: 24.h,
@@ -129,7 +143,7 @@ class _CustomBottomBarScreenState extends State<CustomBottomBarScreen>
               SvgPicture.asset(
                 "assets/images/setting-2.svg",
                 color:
-                    currentPage == 2
+                    currentPage == 3
                         ? AppColors.whiteFFFFFF
                         : AppColors.black323536,
                 height: 24.h,
@@ -148,17 +162,21 @@ class _CustomBottomBarScreenState extends State<CustomBottomBarScreen>
     if (!_isBannerLoaded || banner == null) {
       return const SizedBox.shrink();
     }
-    return SafeArea(
-      top: false,
-      child: Container(
-        color: Colors.black,
-        width: double.infinity,
-        height: _bannerHeight,
-        alignment: Alignment.center,
+    return ColoredBox(
+      color: Colors.black,
+      child: SafeArea(
+        top: false,
         child: SizedBox(
-          width: banner.size.width.toDouble(),
+          width: double.infinity,
           height: banner.size.height.toDouble(),
-          child: AdWidget(ad: banner),
+          child: Align(
+            alignment: Alignment.topCenter,
+            child: SizedBox(
+              width: banner.size.width.toDouble(),
+              height: banner.size.height.toDouble(),
+              child: AdWidget(ad: banner),
+            ),
+          ),
         ),
       ),
     );

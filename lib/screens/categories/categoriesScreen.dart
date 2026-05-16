@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:ghost_money_world/ads/adsService.dart';
 import 'package:ghost_money_world/config/utils.dart';
 import 'package:ghost_money_world/models/videoModel.dart';
 import 'package:ghost_money_world/screens/categories/categoriesController.dart';
@@ -107,20 +108,22 @@ class CategoryListSection extends StatelessWidget {
                           padding: const EdgeInsets.only(right: 15, left: 15),
                           child: InkWell(
                             onTap: () {
-                              VideoLoginPrompt.guardVideoAccess(
-                                onAuthorized: () {
-                                  Get.to(
-                                    () => VideoDetailPage(
-                                      title: video.title,
-                                      description: video.description,
-                                      categoryId: video.category,
-                                      videoUrl: video.resolvedVideoUrl,
-                                      thumbnail: video.resolvedThumbnail,
-                                      id: video.id,
-                                    ),
-                                  );
-                                },
-                              );
+                              AdsService.showInterstitial(() {
+                                VideoLoginPrompt.guardVideoAccess(
+                                  onAuthorized: () {
+                                    Get.to(
+                                      () => VideoDetailPage(
+                                        title: video.title,
+                                        description: video.description,
+                                        categoryId: video.category,
+                                        videoUrl: video.resolvedVideoUrl,
+                                        thumbnail: video.resolvedThumbnail,
+                                        id: video.id,
+                                      ),
+                                    );
+                                  },
+                                );
+                              });
                             },
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(12),

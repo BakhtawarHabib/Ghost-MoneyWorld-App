@@ -104,6 +104,21 @@ class VideoLoginPrompt {
     );
   }
 
+  static Future<void> guardFeedInteraction({
+    required VoidCallback onAuthorized,
+  }) async {
+    final user = _authService.currentUser;
+    if (user != null && !user.isAnonymous) {
+      onAuthorized();
+      return;
+    }
+
+    await _showPrompt(
+      message: "Please login first to like or comment on feed videos.",
+      onGuestContinue: () {},
+    );
+  }
+
   static Future<void> guardEditProfileAccess({
     required VoidCallback onAuthorized,
   }) async {

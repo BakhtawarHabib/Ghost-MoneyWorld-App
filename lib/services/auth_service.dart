@@ -47,6 +47,10 @@ class AuthService {
 
   User? get currentUser => _auth.currentUser;
 
+  Future<String?> getIdToken({bool forceRefresh = false}) async {
+    return _auth.currentUser?.getIdToken(forceRefresh);
+  }
+
   Future<Map<String, dynamic>?> getProfile() async {
     final user = _auth.currentUser;
     if (user == null) return null;

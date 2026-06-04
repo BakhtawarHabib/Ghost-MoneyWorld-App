@@ -1,4 +1,7 @@
+import 'dart:math';
+
 import 'package:get/get.dart';
+import 'package:ghost_money_world/ads/adsService.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:ghost_money_world/config/api_config.dart';
 import 'package:ghost_money_world/models/feed_interactions.dart';
@@ -17,11 +20,26 @@ class FeedController extends GetxController {
   String? errorMessage;
   int currentIndex = 0;
   bool tabVisible = false;
+  bool adGateActive = false;
+
+  final Random _random = Random();
+  int _forwardSwipes = 0;
+  int _videosUntilNextAd = 3;
+  bool _adInProgress = false;
+
+  bool get canPlayVideo => tabVisible && !adGateActive;
 
   @override
   void onInit() {
     super.onInit();
+    _resetAdInterval();
+    AdsService.loadInterstitial();
     loadFeed();
+  }
+
+  void _resetAdInterval() {
+    _forwardSwipes = 0;
+    _videosUntilNextAd = 2 + _random.nextInt(2); // 2 or 3 videos between ads
   }
 
   Future<void> loadFeed({bool refresh = false}) async {
@@ -36,6 +54,10 @@ class FeedController extends GetxController {
       videos
         ..clear()
         ..addAll(list);
+      _resetAdInterval();
+      adGateActive = false;
+      _adInProgress = false;
+      currentIndex = 0;
       errorMessage = null;
       loading = false;
       update();
@@ -61,6 +83,29 @@ class FeedController extends GetxController {
   }
 
   void onPageChanged(int index) {
+    if (_adInProgress) return;
+
+    final previousIndex = currentIndex;
+
+    if (tabVisible && index > previousIndex) {
+      _forwardSwipes++;
+      if (_forwardSwipes >= _videosUntilNextAd) {
+        currentIndex = index;
+        adGateActive = true;
+        _adInProgress = true;
+        update();
+
+        AdsService.showInterstitial(() {
+          _adInProgress = false;
+          adGateActive = false;
+          _resetAdInterval();
+          update();
+          preloadInteractionsAround(index);
+        });
+        return;
+      }
+    }
+
     currentIndex = index;
     update();
     preloadInteractionsAround(index);

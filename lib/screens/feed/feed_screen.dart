@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:ghost_money_world/ads/adsService.dart';
 import 'package:ghost_money_world/constants/app_colors.dart';
 import 'package:ghost_money_world/constants/text_helper.dart';
 import 'package:ghost_money_world/screens/feed/feed_controller.dart';
+import 'package:ghost_money_world/screens/feed/feed_upload_flow.dart';
+import 'package:ghost_money_world/screens/feed/widgets/feed_upload_button.dart';
 import 'package:ghost_money_world/screens/feed/widgets/feed_video_page.dart';
 import 'package:shimmer/shimmer.dart';
 
@@ -20,25 +23,9 @@ class _FeedScreenState extends State<FeedScreen> {
   @override
   void initState() {
     super.initState();
-    final controller = Get.put(FeedController(), tag: 'feed');
-    controller.setTabVisible(true);
+    Get.put(FeedController(), tag: 'feed');
+    AdsService.loadInterstitial();
     _pageController = PageController();
-  }
-
-  @override
-  void deactivate() {
-    if (Get.isRegistered<FeedController>(tag: 'feed')) {
-      Get.find<FeedController>(tag: 'feed').setTabVisible(false);
-    }
-    super.deactivate();
-  }
-
-  @override
-  void activate() {
-    super.activate();
-    if (Get.isRegistered<FeedController>(tag: 'feed')) {
-      Get.find<FeedController>(tag: 'feed').setTabVisible(true);
-    }
   }
 
   @override
@@ -83,7 +70,6 @@ class _FeedScreenState extends State<FeedScreen> {
                 itemBuilder: (context, index) {
                   final video = controller.videos[index];
                   return FeedVideoPage(
-                    key: ValueKey(video.id),
                     video: video,
                     isActive: controller.currentIndex == index,
                   );
@@ -136,11 +122,18 @@ class _FeedScreenState extends State<FeedScreen> {
     return Center(
       child: Padding(
         padding: EdgeInsets.symmetric(horizontal: 24.w),
-        child: customText(
-          text: 'No feed videos yet.\nCheck back soon!',
-          color: Colors.white70,
-          textAlign: TextAlign.center,
-          fontSize: 16.sp,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            customText(
+              text: 'No feed videos yet.\nBe the first to upload!',
+              color: Colors.white70,
+              textAlign: TextAlign.center,
+              fontSize: 16.sp,
+            ),
+            SizedBox(height: 20.h),
+            FeedUploadButton(size: 56, onTap: FeedUploadFlow.open),
+          ],
         ),
       ),
     );

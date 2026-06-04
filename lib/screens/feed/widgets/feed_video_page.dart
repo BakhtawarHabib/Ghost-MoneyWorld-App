@@ -7,7 +7,9 @@ import 'package:ghost_money_world/constants/app_colors.dart';
 import 'package:ghost_money_world/constants/text_helper.dart';
 import 'package:ghost_money_world/models/feed_video.dart';
 import 'package:ghost_money_world/screens/feed/feed_controller.dart';
+import 'package:ghost_money_world/screens/feed/feed_upload_flow.dart';
 import 'package:ghost_money_world/screens/feed/widgets/feed_comments_sheet.dart';
+import 'package:ghost_money_world/screens/feed/widgets/feed_upload_button.dart';
 import 'package:video_player/video_player.dart';
 
 class FeedVideoPage extends StatefulWidget {
@@ -29,7 +31,7 @@ class _FeedVideoPageState extends State<FeedVideoPage> {
   bool get _shouldPlay {
     if (!widget.isActive) return false;
     if (!Get.isRegistered<FeedController>(tag: 'feed')) return widget.isActive;
-    return Get.find<FeedController>(tag: 'feed').tabVisible;
+    return Get.find<FeedController>(tag: 'feed').canPlayVideo;
   }
 
   @override
@@ -47,7 +49,7 @@ class _FeedVideoPageState extends State<FeedVideoPage> {
     final oldShouldPlay =
         oldWidget.isActive &&
         (Get.isRegistered<FeedController>(tag: 'feed')
-            ? Get.find<FeedController>(tag: 'feed').tabVisible
+            ? Get.find<FeedController>(tag: 'feed').canPlayVideo
             : oldWidget.isActive);
 
     if (shouldPlay && !oldShouldPlay) {
@@ -144,11 +146,11 @@ class _FeedVideoPageState extends State<FeedVideoPage> {
       tag: 'feed',
       builder: (controller) {
         if (widget.isActive) {
-          if (controller.tabVisible && _controller == null && !_loadFailed) {
+          if (controller.canPlayVideo && _controller == null && !_loadFailed) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (mounted && _shouldPlay) _initPlayer();
             });
-          } else if (!controller.tabVisible && _controller != null) {
+          } else if (!controller.canPlayVideo && _controller != null) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (mounted) _pauseAndRelease();
             });
@@ -183,6 +185,7 @@ class _FeedVideoPageState extends State<FeedVideoPage> {
                     interactions.commentCount,
                   ),
                   muted: _muted,
+                  onUpload: FeedUploadFlow.open,
                   onLike: () => controller.toggleLike(widget.video.id),
                   onComment: _openComments,
                   onShare: () => controller.shareVideo(widget.video),
@@ -282,6 +285,7 @@ class _FeedActionColumn extends StatelessWidget {
   final String likeLabel;
   final String commentLabel;
   final bool muted;
+  final VoidCallback onUpload;
   final VoidCallback onLike;
   final VoidCallback onComment;
   final VoidCallback onShare;
@@ -292,6 +296,7 @@ class _FeedActionColumn extends StatelessWidget {
     required this.likeLabel,
     required this.commentLabel,
     required this.muted,
+    required this.onUpload,
     required this.onLike,
     required this.onComment,
     required this.onShare,
@@ -303,6 +308,8 @@ class _FeedActionColumn extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
+        FeedUploadButton(size: 44, onTap: onUpload),
+        SizedBox(height: 18.h),
         _ActionButton(
           icon: liked ? CupertinoIcons.heart_fill : CupertinoIcons.heart,
           label: likeLabel,

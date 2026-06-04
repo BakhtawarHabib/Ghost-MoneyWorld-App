@@ -119,6 +119,21 @@ class VideoLoginPrompt {
     );
   }
 
+  static Future<void> guardFeedUpload({
+    required Future<void> Function() onAuthorized,
+  }) async {
+    final user = _authService.currentUser;
+    if (user != null && !user.isAnonymous) {
+      await onAuthorized();
+      return;
+    }
+
+    await _showPrompt(
+      message: "Please login first to upload feed videos.",
+      onGuestContinue: () {},
+    );
+  }
+
   static Future<void> guardEditProfileAccess({
     required VoidCallback onAuthorized,
   }) async {
